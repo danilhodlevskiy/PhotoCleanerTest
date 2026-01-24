@@ -8,8 +8,19 @@
 import SwiftUI
 
 struct ContentView: View {
+    @AppStorage("showOnboarding") var showOnboarding: Bool = true
+    
     var body: some View {
-        HomeView()
+        Group {
+            if showOnboarding {
+                OnboardingView()
+                    .transition(.move(edge: .bottom))
+            } else {
+                HomeView()
+            }
+        }
+        .animation(.default, value: showOnboarding)
+        
     }
 }
 

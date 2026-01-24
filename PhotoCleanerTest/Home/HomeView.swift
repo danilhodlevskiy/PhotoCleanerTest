@@ -60,7 +60,7 @@ private extension HomeView {
                 FeatureCard(
                     title: "Video Compressor",
                     icon: .majesticonsVideo,
-                    iconBackground: .purple600.opacity(0.09),
+                    iconBackground: .pink600.opacity(0.09),
                     showLock: !vm.isPhotoAuthorizationGranted(),
                     onLockTap: openAppSettings,
                     subtitle: SubtitleState(
@@ -101,6 +101,7 @@ private extension HomeView {
     }
 
     func openAppSettings() {
+        HapticManager.instance.generateFeedback(.light)
         guard let url = URL(string: UIApplication.openSettingsURLString) else { return }
         openURL(url)
     }
@@ -117,7 +118,7 @@ private struct StorageHeaderView: View {
 
             storageText
         }
-        .foregroundStyle(Color.text)
+        .foregroundStyle(Color.gray50)
         .font(.callout)
     }
 
@@ -149,7 +150,7 @@ private struct RingProgressView: View {
                 Text(caption)
                     .font(.footnote)
             }
-            .foregroundStyle(.text)
+            .foregroundStyle(.gray50)
 
             ZStack {
                 Circle()
@@ -271,7 +272,6 @@ private struct LockButton: View {
             .background(.red100)
             .clipShape(Circle())
             .onTapGesture(perform: action)
-            .accessibilityLabel("Open Settings")
     }
 }
 
