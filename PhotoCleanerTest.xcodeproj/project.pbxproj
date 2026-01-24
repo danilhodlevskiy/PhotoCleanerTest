@@ -10,9 +10,22 @@
 		9738D8E62F226CD600D3CD23 /* PhotoCleanerTest.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = PhotoCleanerTest.app; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
+/* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
+		9738D9E52F23779C00D3CD23 /* Exceptions for "PhotoCleanerTest" folder in "PhotoCleanerTest" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Info.plist,
+			);
+			target = 9738D8E52F226CD600D3CD23 /* PhotoCleanerTest */;
+		};
+/* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
+
 /* Begin PBXFileSystemSynchronizedRootGroup section */
 		9738D8E82F226CD600D3CD23 /* PhotoCleanerTest */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				9738D9E52F23779C00D3CD23 /* Exceptions for "PhotoCleanerTest" folder in "PhotoCleanerTest" target */,
+			);
 			path = PhotoCleanerTest;
 			sourceTree = "<group>";
 		};
@@ -256,6 +269,10 @@
 				DEVELOPMENT_TEAM = TZR832CGLS;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = PhotoCleanerTest/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = "";
+				INFOPLIST_KEY_LSApplicationCategoryType = "";
+				INFOPLIST_KEY_NSRemindersUsageDescription = "To continue searching for similar photos and videos, you need access to the appropriate resources.";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
@@ -289,6 +306,10 @@
 				DEVELOPMENT_TEAM = TZR832CGLS;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = PhotoCleanerTest/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = "";
+				INFOPLIST_KEY_LSApplicationCategoryType = "";
+				INFOPLIST_KEY_NSRemindersUsageDescription = "To continue searching for similar photos and videos, you need access to the appropriate resources.";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;

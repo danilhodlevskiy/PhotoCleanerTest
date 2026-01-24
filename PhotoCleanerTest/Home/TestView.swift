@@ -1,47 +1,17 @@
-//
-//  HomeViewModel.swift
-//  PhotoCleanerTest
-//
-//  Created by danilka on 22.01.2026.
-//
-
 import SwiftUI
-import Combine
 import Photos
+import Combine
 
-final class HomeViewModel: ObservableObject {
-
+fileprivate final class MediaStatsViewModel: ObservableObject {
+    
+    @Published var livePhotoCount: Int = 0
     @Published var authorizationStatus: PHAuthorizationStatus = .notDetermined
+    @Published var firstAsset: PHAsset? = nil
+    @Published var firstImage: UIImage? = nil
     
-    @Published var totalStorage: Double? = nil
-    @Published var usedStorage: Double? = nil
-    @Published var usedStoragePercent: Double = 0
-    
-    @Published var isCalculatingAssetsCount: Bool = false
-    @Published var allAssetsCount: Int = 0
+    @Published var allAssets: Int = 0
     @Published var photoCount: Int = 0
     @Published var videoCount: Int = 0
-    
-    func load() {
-
-        requestAccessWithDelay()
-        
-        if let storageInfo = getDeviceStorageInfo() {
-            totalStorage = Double(storageInfo.totalSpace) / (1024 * 1024 * 1024)
-            usedStorage = Double(storageInfo.usedSpace) / (1024 * 1024 * 1024)
-            
-            if let totalStorage, let usedStorage {
-                Task { [weak self] in
-                    try? await Task.sleep(for: .milliseconds(250))
-                    guard let self else { return }
-                    
-                    withAnimation(.smooth(duration: 1)) {
-                        self.usedStoragePercent = (usedStorage / totalStorage )
-                    }
-                }
-            }
-        }
-    }
     
     func requestAccessWithDelay() {
         DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
@@ -54,7 +24,6 @@ final class HomeViewModel: ObservableObject {
             DispatchQueue.main.async {
                 self.authorizationStatus = status
                 
-                self.isCalculatingAssetsCount = true
                 if status == .authorized || status == .limited {
                     self.fetchMediaCounts()
                 }
@@ -63,15 +32,12 @@ final class HomeViewModel: ObservableObject {
     }
     
     private func fetchMediaCounts() {
-        /*
         let imageOptions = PHFetchOptions()
         imageOptions.predicate = NSPredicate(format: "mediaType == %d", PHAssetMediaType.image.rawValue) // Перевіряємо чи mediaType відповідає фотографіям
         
         let videoOptions = PHFetchOptions()
-        videoOptions.predicate = NSPredicate(format: "mediaType == %d", PHAssetMediaType.video.rawValue) // Перевіряємо чи mediaType відповідає відео І їх довжина більше 100 секунд
-         */
+        videoOptions.predicate = NSPredicate(format: "mediaType == %d AND duration >= %f", PHAssetMediaType.video.rawValue, 100.0) // Перевіряємо чи mediaType відповідає відео І їх довжина більше 100 секунд
         
-        /*
         let livePhotoOptions = PHFetchOptions() // ЛайфФото це тільки фотографії (бо не існує Live відео наприклад або аудіо, це просто чернова перевірка, на всякий випадок) і підкатегорія фотографій має бути ЛайфФото
         var livePhotoPredicates: [NSPredicate] = [] // Масив наших фільтрів
         
@@ -79,6 +45,7 @@ final class HomeViewModel: ObservableObject {
         
         livePhotoPredicates.append(NSPredicate(format: "(mediaSubtype & %d) != 0", PHAssetMediaSubtype.photoLive.rawValue)) // Беремо всі категорії і перевіряємо, чи серед них є ЛайфФото (тобто це буде брати всі варіації LivePhoto, які тільки можливі і не можливі, наприклад тільки Лайф, Лайф з HDR, Лайф панорами тощо)
         livePhotoOptions.predicate = NSCompoundPredicate(andPredicateWithSubpredicates: livePhotoPredicates)
+        
         
         let livePhotoSimpleOptions = PHFetchOptions()
         var livePhotoSimplePredicates: [NSPredicate] = []
@@ -93,34 +60,73 @@ final class HomeViewModel: ObservableObject {
         livePhotoTheSimplestOptions.predicate = NSPredicate(format: "mediaType == %d AND mediaSubtype == %d", PHAssetMediaType.image.rawValue, PHAssetMediaSubtype.photoLive.rawValue)
         let livePhotoTheSimplestCount = PHAsset.fetchAssets(with: livePhotoTheSimplestOptions).count
         print("livePhotoTheSimplestCount: \(livePhotoTheSimplestCount)")
-         */
         
         let assets = PHAsset.fetchAssets(with: nil)
-        
-        photoCount = assets.countOfAssets(with: .image)
-        videoCount = assets.countOfAssets(with: .video)
-        allAssetsCount = assets.count
-        
-        isCalculatingAssetsCount = false
-    }
-    
-    func getDeviceStorageInfo() -> (totalSpace: Int64, usedSpace: Int64)? {
-        let fileURL = URL(fileURLWithPath: NSHomeDirectory() as String)
-        do {
-            let values = try fileURL.resourceValues(forKeys: [.volumeTotalCapacityKey, .volumeAvailableCapacityForImportantUsageKey])
-            if let totalCapacity = values.volumeTotalCapacity,
-               let availableCapacity = values.volumeAvailableCapacityForImportantUsage {
-                return (Int64(totalCapacity), (Int64(totalCapacity) - availableCapacity))
-            }
-        } catch {
-            print("Error retrieving storage info: \(error.localizedDescription)")
+        allAssets = assets.count
+        firstAsset = assets.firstObject
+        if let firstAsset {
+            loadFirstImage(firstAsset)
         }
-        return nil
+        photoCount = PHAsset.fetchAssets(with: imageOptions).count
+        livePhotoCount = PHAsset.fetchAssets(with: livePhotoOptions).count
+        videoCount = PHAsset.fetchAssets(with: videoOptions).count
     }
     
-    func isPhotoAuthorizationGranted() -> Bool {
-        PHPhotoLibrary.authorizationStatus() == .authorized || PHPhotoLibrary.authorizationStatus() == .limited
+    func loadFirstImage(_ asset: PHAsset) {
+        let manager = PHImageManager.default()
+        let options = PHImageRequestOptions()
+        options.isSynchronous = false
+        options.deliveryMode = .highQualityFormat
+        
+        manager.requestImage(for: asset, targetSize: CGSize(width: 250, height: 250), contentMode: .aspectFit, options: options) { [weak self] (uiImage, info) in
+            DispatchQueue.main.async { // Ensure UI updates are on the main thread
+                self?.firstImage = uiImage
+            }
+        }
+
     }
+}
+
+struct TestView: View {
     
+    @StateObject private var viewModel = MediaStatsViewModel()
     
+    var body: some View {
+        VStack(spacing: 16) {
+            
+            Text("Media stats")
+                .font(.title.bold())
+            
+            if viewModel.authorizationStatus == .authorized ||
+               viewModel.authorizationStatus == .limited {
+                
+                VStack {
+                    VStack(spacing: 8) {
+                        Text("🌁 All media: \(viewModel.allAssets)")
+                        Text("📷 Photos: \(viewModel.photoCount)")
+                        Text("🌅 LivePhotos: \(viewModel.livePhotoCount)")
+                        Text("🎥 Videos: \(viewModel.videoCount)")
+                    }
+                    .font(.title3)
+                    
+                    if let firstImage = viewModel.firstImage {
+                        Image(uiImage: firstImage)
+                            .clipShape(RoundedRectangle(cornerRadius: 15))
+                    }
+                }
+                
+            } else {
+                Text("Waiting for photo access…")
+                    .foregroundStyle(.secondary)
+            }
+        }
+        .padding()
+        .onAppear {
+            viewModel.requestAccessWithDelay()
+        }
+    }
+}
+
+#Preview {
+    TestView()
 }
